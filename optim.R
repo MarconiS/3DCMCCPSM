@@ -22,37 +22,36 @@ for (j in sites) {
   par5 <- " -e /Users/sergiomarconi/Documents/Classes/StatisticsForBiologicalSciences/3D-CMCC-Forest-Model/output_6.1/annual_output_6.1/annual_output"
   par6 <- " -n /Users/sergiomarconi/Documents/Classes/StatisticsForBiologicalSciences/3D-CMCC-Forest-Model/output_6.1/soil_output_6.1/soil_output"
   par7 <- paste(" -d /Users/sergiomarconi/Documents/Classes/StatisticsForBiologicalSciences/3D-CMCC-Forest-Model/input/",j, "/input.txt", sep="")
-  par8 <- paste(" -m ",pr.dir, "/input/",j,"/111_111_2000.txt", sep="")
+  par8 <- readChar(paste(pr.dir, "/input/",j,"/trainMet.txt", sep=""), file.info(paste(pr.dir, "/input/",j,"/trainMet.txt", sep=""))$size)
   par9 <- paste(" -s /Users/sergiomarconi/Documents/Classes/StatisticsForBiologicalSciences/3D-CMCC-Forest-Model/input/",j,"/site.txt", sep="")
   par10 <- paste(" -c /Users/sergiomarconi/Documents/Classes/StatisticsForBiologicalSciences/3D-CMCC-Forest-Model/input/",j,"/settings.txt", sep="")
   
   running.string <- paste(par1, par2, par3,par4,par5,par6,par7,par8,par9,par10, sep="")
   
   eclipseoutput.dir <- "~/Documents/Classes/StatisticsForBiologicalSciences/3D-CMCC-Forest-Model/output_6.1/daily_output_6.1"
-  observed <-read.table(file=paste("/Users/sergiomarconi/Documents/Classes/StatisticsForBiologicalSciences/Optimization/",j,"NEE.csv", sep=""), header=TRUE)
+  observed <-read.table(file=paste("/Users/sergiomarconi/Documents/Classes/StatisticsForBiologicalSciences/Optimization/",j,"NEE.csv", sep=""), header=TRUE, sep=",")
   
   
   setwd(target.dir)
   target.file <- data.frame(read.table(file="speciesOptim.txt", header=FALSE))
-  params.list <- as.data.frame.array(read.csv(paste(pr.dir, "/input/PrPar.csv", sep=""), header = FALSE, stringsAsFactors = FALSE)) 
+  params.list <- as.data.frame.array(read.csv(paste(target.dir, "/PrPar.csv", sep=""), header = FALSE, stringsAsFactors = FALSE)) 
   
   nparams <- length(params.list[,1])
   row.numpars <- rep(0,nparams)
   for(i in 1: nparams){	
-    parm <- params.list[i,]
+    parm <- params.list[i,1]
     row.numpars[i] <- which(target.file[,1]==parm, arr.ind=TRUE)
   }
   for(runs in 1:1)
   {
-    #new.values <- target.file[row.numpars,2]*2 # just to try
     #fill with the specific param set
-    new.fill <- read.delim("Prior.txt", header=FALSE)
+    new.fill <- params.list[,2:3]
     
     new.values<- rep(0,nparams)
     for(i in 1: nparams){	
       #rtrunknorm because the values of the parameters are all positive
-      new.values[i] <-rtruncnorm(n=1, a=0.001, b=(new.fill[i,2]+2*new.fill[i,3]), mean=new.fill[i,2], sd=new.fill[i,3])
-      if(params.list[i,]=="SWPOPEN" || params.list[i,] == "SWPCLOSE"){
+      new.values[i] <-rtruncnorm(n=1, a=0.001, b=(new.fill[i,1]+2*new.fill[i,2]), mean=new.fill[i,1], sd=new.fill[i,2])
+      if(params.list[i,1]=="SWPOPEN" || params.list[i,1] == "SWPCLOSE"){
         new.values[i] = -new.values[i]
       }
     }
@@ -68,9 +67,17 @@ for (j in sites) {
     {
       out.val <- c(cor(observed, predicted$NEE),"NA", "NA", "NA")
     }else{
-      lse <- lsfit(observed,predicted$NEE, intercept = FALSE, tolerance = 1e-07, yname = NULL)
-      out.val <- c(cor(observed, predicted$NEE),NSE.data.frame(predicted$NEE, observed),
-                   mae.data.frame(predicted$NEE, observed))
+      row.index <- rep(0,length(observed$DoY))
+      for(i in 1: length(observed$DoY)){	
+        row.index[i] <- which(as.numeric(predicted[,1]==observed[i,1]) * 
+                                 as.numeric(predicted[,2]==observed[i,2])==1 , arr.ind=TRUE)
+      }
+      
+      train.obs <- observed$NEE_st_fANN
+      train.pred <-predicted[row.index,]$NEE
+      lse <- lsfit(train.obs,train.pred, intercept = FALSE, tolerance = 1e-07, yname = NULL)
+      out.val <- c(cor(train.obs,train.pred),NSE.data.frame(train.obs,train.pred),
+                   mae.data.frame(train.obs,train.pred))
     }
     
     FF <- as.matrix(t(c(new.values, out.val)))
