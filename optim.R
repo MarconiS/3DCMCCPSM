@@ -69,11 +69,7 @@ for (j in sites) {
   
   
   setwd(target.dir)
-<<<<<<< HEAD
-  target.file <<- data.frame(read.table(file="speciesOptim.txt", header=FALSE))
-=======
   target.file <- data.frame(read.table(file="speciesOptim.txt", header=FALSE))
->>>>>>> b2b9ac53d5e94312128b4f16099280040be1f771
   params.list <- as.data.frame.array(read.csv(paste(target.dir, "/PrPar.csv", sep=""), header = FALSE, stringsAsFactors = FALSE)) 
   
   nparams <- length(params.list[,1])
@@ -88,13 +84,7 @@ for (j in sites) {
   #randomizer 
   for(runs in 1:1000)
   {
-<<<<<<< HEAD
     setwd(target.dir)
-=======
-    #fill with the specific param set
-    new.fill <- params.list[,2:3]
-    
->>>>>>> b2b9ac53d5e94312128b4f16099280040be1f771
     new.values<- rep(0,nparams)
     for(i in 1: nparams){	
       #rtrunknorm because the values of the parameters are all positive
@@ -119,20 +109,11 @@ for (j in sites) {
       row.index <- rep(0,length(observed$DoY))
       for(i in 1: length(observed$DoY)){	
         row.index[i] <- which(as.numeric(predicted[,1]==observed[i,1]) * 
-<<<<<<< HEAD
-                                as.numeric(predicted[,2]==observed[i,2])==1 , arr.ind=TRUE)
-=======
-                                 as.numeric(predicted[,2]==observed[i,2])==1 , arr.ind=TRUE)
->>>>>>> b2b9ac53d5e94312128b4f16099280040be1f771
+          as.numeric(predicted[,2]==observed[i,2])==1 , arr.ind=TRUE)
       }
       
       train.obs <- observed$NEE_st_fANN
       train.pred <-predicted[row.index,]$NEE
-<<<<<<< HEAD
-      #lse <- lsfit(train.obs,train.pred, intercept = FALSE, tolerance = 1e-07, yname = NULL)
-=======
-      lse <- lsfit(train.obs,train.pred, intercept = FALSE, tolerance = 1e-07, yname = NULL)
->>>>>>> b2b9ac53d5e94312128b4f16099280040be1f771
       out.val <- c(cor(train.obs,train.pred),NSE.data.frame(train.obs,train.pred),
                    mae.data.frame(train.obs,train.pred))
     }
@@ -147,7 +128,7 @@ for (j in sites) {
   best.random <- na.omit(best.random)
   best.initial <- best.random[which(best.random$NSE==max(best.random$NSE)),]
   new.fill <- as.vector(t(best.initial[,1:45]))
-
+  
   target.file[row.numpars,2] <- new.fill
   setwd(target.dir)
   write.table(x=target.file, file=paste(getwd(),"/speciesOptim.txt",sep=""), quote=FALSE, row.names=FALSE, col.names = FALSE)
@@ -165,7 +146,7 @@ for (j in sites) {
   target.file[row.numpars,2] <- best.params
   setwd(target.dir)
   write.table(x=target.file, file=paste(getwd(),"/speciesOptim.txt",sep=""), quote=FALSE, row.names=FALSE, col.names = FALSE)
-
+  
   #run parameterization on test set
   par8 <- readChar(paste(pr.dir, "/input/",j,"/testMet.txt", sep=""), file.info(paste(pr.dir, "/input/",j,"/testMet.txt", sep=""))$size)
   running.string <- paste(par1, par2, par3,par4,par5,par6,par7,par8,par9,par10, sep="")
