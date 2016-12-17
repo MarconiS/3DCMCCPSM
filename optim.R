@@ -171,7 +171,6 @@ for (j in sites) {
   running.string <- paste(par1, par2, par3,par4,par5,par6,par7,par8,par9,par10, sep="")
   setwd(curr.dir)
   system(running.string)
-  
 } 
 
 
